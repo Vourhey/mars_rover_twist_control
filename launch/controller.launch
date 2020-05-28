@@ -1,0 +1,4 @@
+<launch>
+    <node ns="mars" name="controller" pkg="mars_rover_twist_control" type="control_node" output="screen">
+    </node>
+</launch>
