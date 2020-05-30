@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from geometry_msgs.msg import Twist
-from std_srvs.srv import Empty, EmptyRequest
+from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
 
 
 class ControlNode:
@@ -14,8 +14,9 @@ class ControlNode:
 
         rospy.loginfo("Controller node is ready!")
 
-    def launch_rover(self, req: EmptyRequest):
+    def forward(self):
         speed = 1
+        distance = 10
         vel_msg = Twist()
 
         vel_msg.linear.x = speed
@@ -35,10 +36,44 @@ class ControlNode:
             t1=rospy.Time.now().to_sec()
             #Calculates distancePoseStamped
             current_distance= speed*(t1-t0)
-            #After the loop, stops the robot
 
-        vel_msg.angular.z = 0.5
-        velocity_publisher.publish(vel_msg)
+        vel_msg.linear.x = 0
+        self.velocity_publisher.publish(vel_msg)
+
+    def rotate(self, right = 1):
+        speed = 2
+        distance = 40
+        vel_msg = Twist()
+
+        vel_msg.linear.x = speed
+        vel_msg.linear.y = 0
+        vel_msg.linear.z = 0
+        vel_msg.angular.x = 0
+        vel_msg.angular.y = 0
+        vel_msg.angular.z = right * speed
+
+        t0 = rospy.Time.now().to_sec()
+        current_distance = 0
+
+        while(current_distance < distance):
+            #Publish the velocity
+            self.velocity_publisher.publish(vel_msg)
+            #Takes actual time to velocity calculus
+            t1=rospy.Time.now().to_sec()
+            #Calculates distancePoseStamped
+            current_distance= speed*(t1-t0)
+
+        vel_msg.linear.x = 0
+        vel_msg.angular.z = 0
+        self.velocity_publisher.publish(vel_msg)
+
+    def launch_rover(self, req):
+        self.forward()
+        self.rotate()
+        self.forward()
+        self.rotate(-1)
+
+        return EmptyResponse()
 
     def spin(self):
         rospy.spin()
